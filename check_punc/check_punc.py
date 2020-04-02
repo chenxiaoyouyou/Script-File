@@ -1093,7 +1093,7 @@ def check_punc(text):
 
 if __name__ == '__main__':
     # check_punc(text)‘’
-    text1 = """❅    ………………      （3.7）"""
+    text1 = """❅    {………………      （3.7）"""
     text2 = '“sfd f“fds ”发多少”'
     # text3 = "设有n个DMU（），每个DMU都有m种输出，如表3-1所示：为对第i种输入的投入量；为对第k种输出的产出量；为对第i种输入的一种度量（“权”）；为对第k种输出的一种度量（“权”）（j=1,2，…，n；i=1,2，…，m；k=1,2，…，s），而且有：，，，。"
     text = [{'paragraphContent': text1, 'paragraphNumber': 1, 'pageIndex': 1}]
