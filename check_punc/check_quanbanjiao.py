@@ -51,19 +51,19 @@ def check(text, number, page):
         if char == "\uFF5D":
             find(dakuohao, item, "\u007B")
             continue
-        if char == "\u007DD":
+        if char == "\u007D":
             find(dakuohao, item, "\uFF5B")
             continue
 
         if char == "\uFF1C" or char == "\u003C":
             jiankuohao.append(item)
-            continue
+            # continue
         if char == "\uFF1E":
             find(jiankuohao, item, "\u003C")
             continue
         if char == "\u003E":
             find(jiankuohao, item, "\uFF1C")
-            continue
+            # continue
 
         if char == "\u3008" or char == "\u003C":
             danshuminghao.append(item)
@@ -127,7 +127,7 @@ def check_quanbanjiao(text):
 if __name__ == '__main__':
     # check_punc(text)‘’
     # '^[a-zA-Z ]*[0-9\.∶-≦≈÷=∑∏≮∴＝﹣﹢﹤≤·＜＋/≡＞*㏒－∵+≠﹥≧≒≯㏑×≥∅\(\)\[\]\{\}｛｝（）］［]+$
-    text1 = """中括号，这个冒险家更换国家、城市、地位、职业、生活风格和女人，就如同在一个身体上更换要洗的衣服那样。[那些同代人在享受方面都是业余爱好者，正如卡萨诺瓦在塑造形象方面是业余爱好者一样]，这是因为，英才的永存悲剧就是，他胜任并且渴望了解生存的广阔内容和欢乐，［这是因为，英才的永存悲剧就是，他胜任并且渴望了解生存的广阔内容和欢乐，然而他却始终被束缚在自己的任务上］做自己工作室的奴隶，因为加于自身的责任而不得自由。[这是因为，英才的永存悲剧就是，他胜任并且渴望了解生存的广阔内容和欢乐，然而他却始终被束缚在自己的任务上，做自己工作室的奴隶］。每个真正的艺术家大半生都是生活在孤独之中和与自己的创作进行的斗争之中，［每个真正的艺术家大半生都是生活在孤独之中和与自己的创作进行的斗争之中，都是完全献身于贴近身边的现实的]，都是完全献身于贴近身边的现实的。"""
+    text1 = """〈₪给自己确立了目标的人会忽略偶然事件：每个艺术家多半都只能表现他耽搁掉亲身经历的事情ꂆ>₪，忘了自己，于是ꂆ<₪给自己确立了目标的人会忽略偶然事件：每个艺术家多半都只能表现他耽搁掉亲身经历的事情ꂆ〉"""
     text2 = '“sfd f“fds ”发多少”'
     text = [{'Text': text1, 'ParagraphIndex': 1, 'PageIndex': 1}]
     a = check_quanbanjiao(text)
