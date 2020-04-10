@@ -13,13 +13,18 @@ def check(text, number, page):
     error_list = []
     errmsg = "成对标点符号格式须一致"
 
-    def find(alist, current, pair):
+    def find(alist, current, pair, pair1=None):
         if len(alist) > 0:
             last_item = alist[-1]
             if last_item['c'] == pair:
                 error_list.append([page, number, current['i'], current['c'], errmsg, 1])
                 error_list.append([page, number, last_item['i'], last_item['c'], errmsg, 1])
-                alist.pop()
+                # if current['c'] == '
+                return alist.pop()
+            elif pair1 is not None:
+                if last_item['c'] == "<":
+                    return alist.pop()
+        return None
 
     for i, char in enumerate(text):
         item = {'i': i, 'c': char}
@@ -55,25 +60,70 @@ def check(text, number, page):
             find(dakuohao, item, "\uFF5B")
             continue
 
-        if char == "\uFF1C" or char == "\u003C":
+        if char == "\uFF1C" or char == "\u003C" or char == "\u3008":
             jiankuohao.append(item)
             # continue
         if char == "\uFF1E":
-            find(jiankuohao, item, "\u003C")
-            continue
-        if char == "\u003E":
-            find(jiankuohao, item, "\uFF1C")
-            # continue
-
-        if char == "\u3008" or char == "\u003C":
-            danshuminghao.append(item)
+            if len(jiankuohao) > 0:
+                last_item = jiankuohao[-1]
+                if last_item['c'] == "\u003c":
+                    error_list.append([page, number, item['i'], item['c'], errmsg, 1])
+                    error_list.append([page, number, last_item['i'], last_item['c'], errmsg, 1])
+                    jiankuohao.pop()
+                    # continue
+                elif last_item['c'] == "\uFF1C":
+                    jiankuohao.pop()
             continue
         if char == "\u3009":
-            find(danshuminghao, item, "\u003C")
+            print(jiankuohao)
+            if len(jiankuohao) > 0:
+                last_item = jiankuohao[-1]
+                if last_item['c'] == "\u003c":
+                    error_list.append([page, number, item['i'], item['c'], errmsg, 1])
+                    error_list.append([page, number, last_item['i'], last_item['c'], errmsg, 1])
+                    jiankuohao.pop()
+                    # continue
+                elif last_item['c'] == "\u3008":
+                    jiankuohao.pop()
+                    # continue
             continue
-        if char == "\u003E":
-            find(danshuminghao, item, "\u3008")
+        if char == '\u003E':
+            if len(jiankuohao) > 0:
+                last_item = jiankuohao[-1]
+                if last_item['c'] in {"\u3008", "\uFF1C"}:
+                    error_list.append([page, number, item['i'], item['c'], errmsg, 1])
+                    error_list.append([page, number, last_item['i'], last_item['c'], errmsg, 1])
+                    jiankuohao.pop()
+                    # continue
+                elif last_item['c'] == "\u003C":
+                    jiankuohao.pop()
+                    # continue
             continue
+            # res1 = find(jiankuohao, item, "\u003C")
+            # if res1 is not None:
+            #     if res1 in danshuminghao:
+            #         danshuminghao.remove(res1)
+            # continue
+        # if char == "\u003E":
+        #     res1 = find(jiankuohao, item, "\uFF1C", pair1=True)
+        #     if res1 is not None:
+        #         if res1 in danshuminghao:
+        #             danshuminghao.remove(res1)
+        #         continue
+            # continue
+
+        # if char == "\u3008" or char == "\u003C":
+        #     danshuminghao.append(item)
+        #     continue
+        # if char == "\u3009":
+        #     res1 = find(danshuminghao, item, "\u003C")
+        #     if res1 is not None:
+        #         if res1 in jiankuohao:
+        #             jiankuohao.remove(res1)
+        #     continue
+        # if char == "\u003E":
+        #     find(danshuminghao, item, "\u3008")
+        #     continue
 
         if char == "\u201C" or char == "\u301D":
             shuangyinhao.append(item)
@@ -113,12 +163,12 @@ def check(text, number, page):
 def check_quanbanjiao(text):
     result_list = []
     for every_dict in text:
-        # Inputtext = every_dict['paragraphContent']
-        # Inputnumber = every_dict['paragraphNumber']
-        # Inputpage = every_dict['pageIndex']
-        Inputtext = every_dict['Text']
-        Inputnumber = every_dict['ParagraphIndex']
-        Inputpage = every_dict['PageIndex']
+        Inputtext = every_dict['paragraphContent']
+        Inputnumber = every_dict['paragraphNumber']
+        Inputpage = every_dict['pageIndex']
+        # Inputtext = every_dict['Text']
+        # Inputnumber = every_dict['ParagraphIndex']
+        # Inputpage = every_dict['PageIndex']
         result = check(Inputtext, Inputnumber, Inputpage)
         result_list = result_list + result
     return result_list
@@ -127,7 +177,9 @@ def check_quanbanjiao(text):
 if __name__ == '__main__':
     # check_punc(text)‘’
     # '^[a-zA-Z ]*[0-9\.∶-≦≈÷=∑∏≮∴＝﹣﹢﹤≤·＜＋/≡＞*㏒－∵+≠﹥≧≒≯㏑×≥∅\(\)\[\]\{\}｛｝（）］［]+$
-    text1 = """〈₪给自己确立了目标的人会忽略偶然事件：每个艺术家多半都只能表现他耽搁掉亲身经历的事情ꂆ>₪，忘了自己，于是ꂆ<₪给自己确立了目标的人会忽略偶然事件：每个艺术家多半都只能表现他耽搁掉亲身经历的事情ꂆ〉"""
+    text1 = """尖括号，ꂆ＜₪做自己工作室的奴隶，因为加于自身的责任而不得自由，并受到规章制度和人间事务的束缚ꂆ＞₪做自己工作室的奴隶<只有非创造性的人能够无拘无束，挥霍浪费，成为为生活而生活的纯粹享受者>，做自己工作室的奴隶，因为加于自身的责任而不得自由，并受到规章制度和人间事务的束缚。ꂆ＜₪给自己确立了目标的人会忽略偶然事件：每个艺术家多半都只能表现他耽搁掉亲身经历的事情ꂆ>₪，做自己工作室的奴隶，ꂆ<₪并受到规章制度和人间事务的束缚。ꂆ＞₪给自己确立了目标的人会忽略偶然事件：每个艺术家多半都只能表现他耽搁掉亲身经历的事情。
+单书名号，〈生活而生活的纯粹享受者。给自己确立了目标的人会忽略偶然事件：每个艺术家多半都只能表现他耽搁掉亲身经历的事情〉。<但是那些轻浮放荡的享乐者，也就是艺术家的对手们，他们几乎总是缺乏塑造丰富多彩的经历的能力>生活而生活的纯粹享受者。ꂆ〈₪给自己确立了目标的人会忽略偶然事件：每个艺术家多半都只能表现他耽搁掉亲身经历的事情ꂆ>₪，忘了自己，于是ꂆ<₪给自己确立了目标的人会忽略偶然事件：每个艺术家多半都只能表现他耽搁掉亲身经历的事情ꂆ〉₪。度和人间事务的束缚。ꂆ＞
+"""
     text2 = '“sfd f“fds ”发多少”'
     text = [{'Text': text1, 'ParagraphIndex': 1, 'PageIndex': 1}]
     a = check_quanbanjiao(text)
