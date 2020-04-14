@@ -1372,7 +1372,7 @@ def check_punc(text):
 if __name__ == '__main__':
     # check_punc(text)‘’
     # '^[a-zA-Z ]*[0-9\.∶-≦≈÷=∑∏≮∴＝﹣﹢﹤≤·＜＋/≡＞*㏒－∵+≠﹥≧≒≯㏑×≥∅\(\)\[\]\{\}｛｝（）］［]+$
-    text1 = """肺宁‘颗粒附近看。dsf 深度地方”"""
+    text1 = """肺宁‘颗粒附近看。。dsf 深度地方”"""
     text2 = '<都是>'
     text = [{'paragraphContent': text1, 'paragraphNumber': 1, 'pageIndex': 1}]
     a = check_punc(text)

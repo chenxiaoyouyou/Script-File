@@ -75,7 +75,7 @@ def check(text, number, page):
                     jiankuohao.pop()
             continue
         if char == "\u3009":
-            print(jiankuohao)
+            # print(jiankuohao)
             if len(jiankuohao) > 0:
                 last_item = jiankuohao[-1]
                 if last_item['c'] == "\u003c":
@@ -163,12 +163,12 @@ def check(text, number, page):
 def check_quanbanjiao(text):
     result_list = []
     for every_dict in text:
-        Inputtext = every_dict['paragraphContent']
-        Inputnumber = every_dict['paragraphNumber']
-        Inputpage = every_dict['pageIndex']
-        # Inputtext = every_dict['Text']
-        # Inputnumber = every_dict['ParagraphIndex']
-        # Inputpage = every_dict['PageIndex']
+        # Inputtext = every_dict['paragraphContent']
+        # Inputnumber = every_dict['paragraphNumber']
+        # Inputpage = every_dict['pageIndex']
+        Inputtext = every_dict['Text']
+        Inputnumber = every_dict['ParagraphIndex']
+        Inputpage = every_dict['PageIndex']
         result = check(Inputtext, Inputnumber, Inputpage)
         result_list = result_list + result
     return result_list
@@ -177,9 +177,7 @@ def check_quanbanjiao(text):
 if __name__ == '__main__':
     # check_punc(text)‘’
     # '^[a-zA-Z ]*[0-9\.∶-≦≈÷=∑∏≮∴＝﹣﹢﹤≤·＜＋/≡＞*㏒－∵+≠﹥≧≒≯㏑×≥∅\(\)\[\]\{\}｛｝（）］［]+$
-    text1 = """尖括号，ꂆ＜₪做自己工作室的奴隶，因为加于自身的责任而不得自由，并受到规章制度和人间事务的束缚ꂆ＞₪做自己工作室的奴隶<只有非创造性的人能够无拘无束，挥霍浪费，成为为生活而生活的纯粹享受者>，做自己工作室的奴隶，因为加于自身的责任而不得自由，并受到规章制度和人间事务的束缚。ꂆ＜₪给自己确立了目标的人会忽略偶然事件：每个艺术家多半都只能表现他耽搁掉亲身经历的事情ꂆ>₪，做自己工作室的奴隶，ꂆ<₪并受到规章制度和人间事务的束缚。ꂆ＞₪给自己确立了目标的人会忽略偶然事件：每个艺术家多半都只能表现他耽搁掉亲身经历的事情。
-单书名号，〈生活而生活的纯粹享受者。给自己确立了目标的人会忽略偶然事件：每个艺术家多半都只能表现他耽搁掉亲身经历的事情〉。<但是那些轻浮放荡的享乐者，也就是艺术家的对手们，他们几乎总是缺乏塑造丰富多彩的经历的能力>生活而生活的纯粹享受者。ꂆ〈₪给自己确立了目标的人会忽略偶然事件：每个艺术家多半都只能表现他耽搁掉亲身经历的事情ꂆ>₪，忘了自己，于是ꂆ<₪给自己确立了目标的人会忽略偶然事件：每个艺术家多半都只能表现他耽搁掉亲身经历的事情ꂆ〉₪。度和人间事务的束缚。ꂆ＞
-"""
+    text1 = """2000年以来，中央提出了“三农〞工作“重中之重〞的战略思想，确定了“工业反哺农业、城市支持农村”的基本方针"""
     text2 = '“sfd f“fds ”发多少”'
     text = [{'Text': text1, 'ParagraphIndex': 1, 'PageIndex': 1}]
     a = check_quanbanjiao(text)
