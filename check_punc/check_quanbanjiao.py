@@ -1,4 +1,5 @@
 # coding=utf-8
+import re
 
 
 def check(text, number, page):
@@ -12,14 +13,15 @@ def check(text, number, page):
     fantiyinhao = []
     error_list = []
     errmsg = "成对标点符号格式须一致"
+    # 成对标点符号格式须一致
 
     def find(alist, current, pair, pair1=None):
         if len(alist) > 0:
             last_item = alist[-1]
             if last_item['c'] == pair:
-                error_list.append([page, number, current['i'], current['c'], errmsg, 1])
-                error_list.append([page, number, last_item['i'], last_item['c'], errmsg, 1])
-                # if current['c'] == '
+                if is_one_sentence(text[last_item['i']:current['i']]):
+                    error_list.append([page, number, current['i'], current['c'], errmsg, 1])
+                    error_list.append([page, number, last_item['i'], last_item['c'], errmsg, 1])
                 return alist.pop()
             elif pair1 is not None:
                 if last_item['c'] == "<":
@@ -67,8 +69,9 @@ def check(text, number, page):
             if len(jiankuohao) > 0:
                 last_item = jiankuohao[-1]
                 if last_item['c'] == "\u003c":
-                    error_list.append([page, number, item['i'], item['c'], errmsg, 1])
-                    error_list.append([page, number, last_item['i'], last_item['c'], errmsg, 1])
+                    if is_one_sentence(text[last_item['i']:i]):
+                        error_list.append([page, number, item['i'], item['c'], errmsg, 1])
+                        error_list.append([page, number, last_item['i'], last_item['c'], errmsg, 1])
                     jiankuohao.pop()
                     # continue
                 elif last_item['c'] == "\uFF1C":
@@ -79,8 +82,9 @@ def check(text, number, page):
             if len(jiankuohao) > 0:
                 last_item = jiankuohao[-1]
                 if last_item['c'] == "\u003c":
-                    error_list.append([page, number, item['i'], item['c'], errmsg, 1])
-                    error_list.append([page, number, last_item['i'], last_item['c'], errmsg, 1])
+                    if is_one_sentence(text[last_item['i']:i]):
+                        error_list.append([page, number, item['i'], item['c'], errmsg, 1])
+                        error_list.append([page, number, last_item['i'], last_item['c'], errmsg, 1])
                     jiankuohao.pop()
                     # continue
                 elif last_item['c'] == "\u3008":
@@ -91,8 +95,9 @@ def check(text, number, page):
             if len(jiankuohao) > 0:
                 last_item = jiankuohao[-1]
                 if last_item['c'] in {"\u3008", "\uFF1C"}:
-                    error_list.append([page, number, item['i'], item['c'], errmsg, 1])
-                    error_list.append([page, number, last_item['i'], last_item['c'], errmsg, 1])
+                    if is_one_sentence(text[last_item['i']:i]):
+                        error_list.append([page, number, item['i'], item['c'], errmsg, 1])
+                        error_list.append([page, number, last_item['i'], last_item['c'], errmsg, 1])
                     jiankuohao.pop()
                     # continue
                 elif last_item['c'] == "\u003C":
@@ -160,15 +165,24 @@ def check(text, number, page):
     return error_list_dict
 
 
+def is_one_sentence(text):
+    print(text)
+    end_of_sen = {"。", "?", "？", "!", "！"}
+    for char in text[:-1]:
+        if char in end_of_sen:
+            return False
+    return True
+
+
 def check_quanbanjiao(text):
     result_list = []
     for every_dict in text:
-        # Inputtext = every_dict['paragraphContent']
-        # Inputnumber = every_dict['paragraphNumber']
-        # Inputpage = every_dict['pageIndex']
-        Inputtext = every_dict['Text']
-        Inputnumber = every_dict['ParagraphIndex']
-        Inputpage = every_dict['PageIndex']
+        Inputtext = every_dict['paragraphContent']
+        Inputnumber = every_dict['paragraphNumber']
+        Inputpage = every_dict['pageIndex']
+        # Inputtext = every_dict['Text']
+        # Inputnumber = every_dict['ParagraphIndex']
+        # Inputpage = every_dict['PageIndex']
         result = check(Inputtext, Inputnumber, Inputpage)
         result_list = result_list + result
     return result_list
@@ -177,7 +191,7 @@ def check_quanbanjiao(text):
 if __name__ == '__main__':
     # check_punc(text)‘’
     # '^[a-zA-Z ]*[0-9\.∶-≦≈÷=∑∏≮∴＝﹣﹢﹤≤·＜＋/≡＞*㏒－∵+≠﹥≧≒≯㏑×≥∅\(\)\[\]\{\}｛｝（）］［]+$
-    text1 = """2000年以来，中央提出了“三农〞工作“重中之重〞的战略思想，确定了“工业反哺农业、城市支持农村”的基本方针"""
+    text1 = """尖括号，＜做自己工作室的奴隶，因为加于自身的责任而不得自由，并受到规章制度和人间事务的束缚＞做自己工作室的奴隶<只有非创造性的人能够无拘无束，挥霍浪费，成为为生活而生活的纯粹享受者>，做自己工作室的奴隶，因为加于自身的责任而不得自由，并受到规章制度和人间事务的束缚。＜给自己确立了目标的人会忽略偶然事件：每个艺术家多半都只能表现他耽搁掉亲身经历的事情>，做自己工作室的奴隶，<并受到规章制度和人间事务的束缚。＞给自己确立了目标的人会忽略偶然事件：每个艺术家多半都只能表现他耽搁掉亲身经历的事情。"""
     text2 = '“sfd f“fds ”发多少”'
     text = [{'Text': text1, 'ParagraphIndex': 1, 'PageIndex': 1}]
     a = check_quanbanjiao(text)
