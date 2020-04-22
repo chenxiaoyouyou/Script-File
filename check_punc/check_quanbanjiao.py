@@ -158,6 +158,7 @@ def check(text, number, page):
         dict_err['offset'] = err[2]
         dict_err['content'] = err[3]
         dict_err['lookup'] = err[4]
+        # errortype
         dict_err['errortype'] = err[5]
         dict_err["rule"] = "全半角检查"
         error_list_dict.append(dict_err)
@@ -166,7 +167,6 @@ def check(text, number, page):
 
 
 def is_one_sentence(text):
-    print(text)
     end_of_sen = {"。", "?", "？", "!", "！"}
     for char in text[:-1]:
         if char in end_of_sen:
