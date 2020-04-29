@@ -243,9 +243,15 @@ def check(text, number, page):
                     chinese_yinhao_nesting.append(item)
                     yinhao_pairs.pop(-2)
                 elif last_item['c'] in {'"', "'"}:
-                    error_list.append([page, number, i, char, "成对标点符号格式须一致", 1])
-                    error_list.append(
+                    if is_one_sentence(text[last_item["i"]:i], False):
+                        error_list.append([page, number, i, char, "成对标点符号格式须一致", 1])
+                        error_list.append(
                         [page, number, last_item["i"], last_item["c"], "成对标点符号格式须一致", 1])
+                    else:
+                        error_list.append([page, number, i, char, "", 1])
+                        error_list.append(
+                            [page, number, last_item["i"], last_item["c"], "", 1])
+
                     yinhao_pairs.pop()
                 else:
                     error_list.append([page, number, i, char, "需补充“", 1])
@@ -281,9 +287,15 @@ def check(text, number, page):
                     chinese_yinhao_nesting.append(item)
                     yinhao_pairs.pop()
                 elif last_item["c"] in {'"', "'"}:
-                    error_list.append([page, number, i, char, "成对标点符号格式须一致", 1])
-                    error_list.append(
+                    if is_one_sentence(text[last_item["i"]:i], False):
+                        error_list.append([page, number, i, char, "成对标点符号格式须一致", 1])
+                        error_list.append(
                         [page, number, last_item["i"], last_item["c"], "成对标点符号格式须一致", 1])
+                    else:
+                        error_list.append([page, number, i, char, "需补充{}".format(yingshe[char]), 1])
+                        error_list.append(
+                            [page, number, last_item["i"], last_item["c"], "需补充{}".format(yingshe[last_item['c']]), 1])
+
                     yinhao_pairs.pop()
                 else:
                     if text[i + 1:i + 2] in left_must_be_banjiao_yinhao:
@@ -514,7 +526,7 @@ def check(text, number, page):
     # print(yinhao_pairs)
     if len(yinhao_pairs) > 0:
 
-        flag=False
+        flag = False
         flag1 = True
         for i in range(len(yinhao_pairs)-1):
             if flag:
@@ -522,10 +534,24 @@ def check(text, number, page):
                 continue
             item_current = yinhao_pairs[i]
             item_next = yinhao_pairs[i+1]
+            if item_current["c"] == "“" and item_next["c"] in {'"', "'"}:
+                error_list.append([page, number, item_current["i"], item_current["c"], "", 1])
+                error_list.append([page, number, item_next["i"], item_next["c"], "", 1])
+                flag = True
+                if i + 2 == len(yinhao_pairs):
+                    # 走到这一步，说明最后一个item已经判断
+                    flag1 = False
+                continue
             if item_current["c"] in {"“", '‘'} and item_next["c"] in {'"', "'"}:
-                error_list.append([page, number, item_current["i"], item_current["c"], "成对标点符号格式须一致", 1])
-                error_list.append([page, number, item_next["i"], item_next["c"], "成对标点符号格式须一致", 1])
-                flag=True
+                if is_one_sentence(text[item_current["i"]:item_next["i"]], False):
+                    print(item_current)
+                    print(text[item_current["i"]:item_next['i']+2])
+                    error_list.append([page, number, item_current["i"], item_current["c"], "成对标点符号格式须一致", 1])
+                    error_list.append([page, number, item_next["i"], item_next["c"], "成对标点符号格式须一致", 1])
+                else:
+                    error_list.append([page, number, item_current["i"], item_current["c"], "需补充{}".format(yingshe[item_current['c']]), 1])
+                    error_list.append([page, number, item_next["i"], item_next["c"], "需补充{}".format(yingshe[item_next['c']]), 1])
+                flag = True
                 if i + 2 == len(yinhao_pairs):
                     # 走到这一步，说明最后一个item已经判断
                     flag1 = False
@@ -930,9 +956,10 @@ def c_yinhao_nesting_check(yinhao_list,text, label="“", yingshe=None):
                     ll['errmsg'] = errmsg1
                     rr['errmsg'] = errmsg1
                 else:
-                    ll['errmsg'] = "需补充{}".format(yingshe[ll['c']])
-                    rr['errmsg'] = "需补充{}".format(yingshe[rr['c']])
-
+                    # ll['errmsg'] = "需补充{}".format(yingshe[ll['c']])
+                    # rr['errmsg'] = "需补充{}".format(yingshe[rr['c']])
+                    ll['errmsg'] = ""
+                    rr['errmsg'] = ""
                 error_list.append(ll)
                 error_list.append(rr)
             elif ll['c'] == left2 and rr['c'] == right1:
@@ -941,18 +968,21 @@ def c_yinhao_nesting_check(yinhao_list,text, label="“", yingshe=None):
                     ll['errmsg'] = errmsg1
                     rr['errmsg'] = errmsg1
                 else:
-                    ll['errmsg'] = "需补充{}".format(yingshe[ll['c']])
-                    rr['errmsg'] = "需补充{}".format(yingshe[rr['c']])
+                    # ll['errmsg'] = "需补充{}".format(yingshe[ll['c']])
+                    # rr['errmsg'] = "需补充{}".format(yingshe[rr['c']])
+                    ll['errmsg'] = ""
+                    rr['errmsg'] = ""
                 error_list.append(ll)
                 error_list.append(rr)
             else:
-                if is_one_sentence(text[ll['i'] + 1:rr['i']], flag=True):
-                    pass
-                else:
-                    ll['errmsg'] = "需补充{}".format(yingshe[ll['c']])
-                    rr['errmsg'] = "需补充{}".format(yingshe[rr['c']])
-                    error_list.append(ll)
-                    error_list.append(rr)
+                # if is_one_sentence(text[ll['i'] + 1:rr['i']], flag=True):
+                #     pass
+                # else:
+                #     ll['errmsg'] = "需补充{}".format(yingshe[ll['c']])
+                #     rr['errmsg'] = "需补充{}".format(yingshe[rr['c']])
+                #     error_list.append(ll)
+                #     error_list.append(rr)
+                pass
 
         elif len(pair_list) == 4:
             item_last2, item_last1, item_current, item_next = pair_list
@@ -1405,8 +1435,8 @@ def check_punc(text):
 if __name__ == '__main__':
     # check_punc(text)‘’
     # '^[a-zA-Z ]*[0-9\.∶-≦≈÷=∑∏≮∴＝﹣﹢﹤≤·＜＋/≡＞*㏒－∵+≠﹥≧≒≯㏑×≥∅\(\)\[\]\{\}｛｝（）］［]+$
-    text1 = "????"
-    text2 = '?！'
+    text1 = """他的激情作为单纯性爱是不知道要那种一次性的极度兴奋的。经检查，‘稿件’徽州文物谱系（绩溪篇）-7-吴中共存在可疑内容（(232处)），{错误类型3种}。因此如果亨利埃特或者漂亮的葡萄牙女子离他而去，使他陷入可怕的绝望，那么，不会使他感到不安，他不会去拿起手枪来的。事实上两天以后我们就会看到他已经到了另外一个女子身边，或者他已经进了妓院。如果修女C. C. 不能再从围墙里到娱乐场来，而由半出家的修女M. M. 代替她出现，那么，安慰也就立即来到了，因为每个修女都能代替另一个修女。其中，"上下文查重"检查错误[124 }处、’易错词检查’错误[104处】、“大纲检查'错误（4处)，易错词<2个，敏感词检查〔3处}，其他错误(0处)。于是人们就不难发现，他作为真正的好色之徒从来没有热恋过他那众多女人中的某一个女人。他热恋着永久的多数，热恋不断更换的艳遇，也就是众多的艳遇。他甚至有一次脱口说出这么一句危险的话：“当时我就模模糊糊地感觉到，爱情不过是一种或多或少强烈的好奇心。”所以要想理解卡萨诺瓦就得抓住这个定义，并且深入分解好奇心这个词：好奇心AA　德文好奇心由 Nen 和 Gierde 两字组成，Neu 是新之意，Gierde 是贪婪之意。BB，是永远贪求永远新的东西，是永远在另一些女人那里贪求永远另一些体验。刺激他的从来不是个体，而是变体，是在异常丰富的性爱棋盘上不间断更新的组合。经检查，《‘稿件徽州文物谱系（绩溪篇）-7-吴》中共存在可疑内容（(232处），{错误类型3种。他的取得和放开都是不假思索的，都是顺从天性的，就如同吸气与呼气一样。这种纯粹官能上的享受说明了，为什么身为艺术家的卡萨诺瓦却没有使他那上千名女子中的某一个女子给我们留下真实的精神形象。平心而论，他的种种描述都使人产生怀疑：他可能根本没有看清楚过他那些情人的面孔，而只是在某一个位置上，用某个极为平庸的观点观看过她们。依据真正南国的风格来看，使得他兴奋鼓舞和“激发”他的热情的始终是那些粗俗的、土里土气的和可以触摸到的东西，还有就是跃进眼帘的女人动情的瞬间。反反复复总是（直到厌倦时为止）“雪白的胸脯”、“美好的臀部”、“端庄威严的形象”，还有不断通过偶然事件而显露出“最神秘的魅力”。其中，"上下文查重检查错误[124]处。正是这些东西使得好色的文科中学生对一个使女看得瞳仁发痒，于是从无数亨利埃特、伊雷妮、巴贝特、马里乌齐莎、埃默丽娜、马尔科丽娜、伊格纳齐亚、卢齐亚、埃斯特尔、扎拉和克拉拉（必定能写满一整本日历！）中间所留存下来的只不过是温暖放荡的女人身上肉皮色的美肤香膏，一种酒神式的号码与数量，成果和热情的混杂物——他的样子完全是醉鬼在早上的表现，他昏沉沉的脑袋已经清醒，他全然不知昨天晚上饮了什么酒，在什么地方饮的，还有与谁在一起饮的。对于那众多的女子，他只是享受到了肌肤，感受到了外表，仅仅认识了她们的肉体。在这里精密的艺术标尺比生活本身给我们更清楚地显示了单纯的好色者与真正的热恋者之间的重大差别，显示了获得一切却无所保留的人与取得很少但全力以赴把转瞬即逝的东西提升为经久不变的东西的人之间的重大差别。易错词检查'错误104处】。司汤达这位实际上相当悲惨的爱情勇士从唯一的一次经历中通过升华分离出来的精神内容，比卡萨诺瓦从这里的三千个夜晚里分离出来的精神内容还多。在精神极度兴奋的什么范围内性爱可能升高，关于这一点，卡萨诺瓦的全部十六大卷的回忆录所给予的概念还不如歌德的一首四个诗节的短诗。大纲检查”错误（4处）。因此，从更高的意义上来看，卡萨诺瓦的回忆录主要是统计数字的报告，而不是长篇小说，主要是征战的经历，而不是虚构创作，是一部在肉欲中漫游的《奥德修纪》，是一部男子对永恒的海伦娜永久贪求的《伊利昂纪》。卡萨诺瓦的回忆录的价值在于它的量，而不是在于它的质。它是以多种变体而不是以单个事例，是通过各种形式不是通过含意深邃的思想，显示出它的价值的。"""
+    text2 = '？！'
     text = [{'paragraphContent': text1, 'paragraphNumber': 1, 'pageIndex': 1}]
     a = check_punc(text)
     for i in a:
