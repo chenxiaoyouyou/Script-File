@@ -8,15 +8,7 @@ def split_cube_for_chinese_yinhao(alist, right_set):
     if len(alist) <= 2:
         return [alist]
     alist = sorted(alist, key=lambda x: x['i'])
-    # left1 = "「"
-    # right1 = "」"
-    # left2 = "『"
-    # right2 = "』"
-    # print(alist)
-    # left = {"“", "‘", "「", "『"}
-    # right = {"”", "’", "」", "』"}
     cube_list = []
-    # temp = [alist[0]]
     temp = []
     left = 0
     for i, item in enumerate(alist):
@@ -94,8 +86,8 @@ def check(text, number, page):
 
     # yinhao_left = {"'", "\"", "‘", "“", "\u301D", "＇"}  # ‘’    “”
     # yinhao_right = {"”", "’", "'", '"', "\u301E", "＇"}
-    kuohao_left = {"[", "{", "【", '(', '（', '〔', "［", "《", '｛'}
-    kuohao_right = {"]", "}", "】", ")", '）', '〕', '］', '》', '｝'}
+    kuohao_left = {"[", "{", "【", '(', '（', '〔', "［", "《", '｛', "＜"}
+    kuohao_right = {"]", "}", "】", ")", '）', '〕', '］', '》', '｝', "＞"}
 
     # character_end = all_biaodian.union(yinhao_right, yinhao_left, kuohao_right , kuohao_left)
     flag = 0
@@ -103,7 +95,7 @@ def check(text, number, page):
     # 用于配对符号
     yingshe = {'[': ']', ']': '[', '{': '}', '}': '{', '【': '】', '】': '【', '(': ')', ')': '(', '（': '）', '）': '（',
                '〔': '〕', '〕': '〔', '［': '］', '］': '［', '《': '》', '》': '《', "'": "'", '"': '"', "‘": "’", "’": "‘",
-               "“": "”", "”": "“", "｛": "｝", '｝': '｛', "〝": "〞", "〞": "〝", "＇": "＇"}
+               "“": "”", "”": "“", "｛": "｝", '｝': '｛', "〝": "〞", "〞": "〝", "＇": "＇", "＜": "＞", "＞": "＜"}
 
     # 用于判断是否为全半角错误
     # yingshe_for_quanbanjiao = {
@@ -223,7 +215,6 @@ def check(text, number, page):
 
         # 左〝  右〞
         # 判断引号
-        # print(yinhao_pairs)
         if char == '“':
             yinhao_pairs.append(item)
             continue
@@ -504,6 +495,11 @@ def check(text, number, page):
     for item in shuminghao_pairs:
         if item['c'] in {"《", "》"}:
             error_list.append([page, number, item["i"], item["c"], "需补充{}".format(yingshe[item["c"]]), 1])
+            continue
+        if item["c"] in {"\u3008", "\u3009"}:
+            error_list.append([page, number, item["i"], item["c"], "需补充{}".format(yingshe[item["c"]]), 1])
+            continue
+        # < 不查询
 
     # 判断繁体引号
     for item in traditional_pairs:
@@ -523,7 +519,6 @@ def check(text, number, page):
                 error_list.append([page, number, temp1["i"], text[temp1['i']], temp1["errmsg"], 2])
 
     # 判断中英文引号的匹配问题
-    # print(yinhao_pairs)
     if len(yinhao_pairs) > 0:
 
         flag = False
@@ -534,23 +529,21 @@ def check(text, number, page):
                 continue
             item_current = yinhao_pairs[i]
             item_next = yinhao_pairs[i+1]
-            if item_current["c"] == "“" and item_next["c"] in {'"', "'"}:
-                error_list.append([page, number, item_current["i"], item_current["c"], "", 1])
-                error_list.append([page, number, item_next["i"], item_next["c"], "", 1])
-                flag = True
-                if i + 2 == len(yinhao_pairs):
-                    # 走到这一步，说明最后一个item已经判断
-                    flag1 = False
-                continue
+            # if item_current["c"] == "“" and item_next["c"] in {'"', "'"}:
+            #     error_list.append([page, number, item_current["i"], item_current["c"], "", 1])
+            #     error_list.append([page, number, item_next["i"], item_next["c"], "", 1])
+            #     flag = True
+            #     if i + 2 == len(yinhao_pairs):
+            #         # 走到这一步，说明最后一个item已经判断
+            #         flag1 = False
+            #     continue
             if item_current["c"] in {"“", '‘'} and item_next["c"] in {'"', "'"}:
                 if is_one_sentence(text[item_current["i"]:item_next["i"]], False):
-                    print(item_current)
-                    print(text[item_current["i"]:item_next['i']+2])
                     error_list.append([page, number, item_current["i"], item_current["c"], "成对标点符号格式须一致", 1])
                     error_list.append([page, number, item_next["i"], item_next["c"], "成对标点符号格式须一致", 1])
                 else:
-                    error_list.append([page, number, item_current["i"], item_current["c"], "需补充{}".format(yingshe[item_current['c']]), 1])
-                    error_list.append([page, number, item_next["i"], item_next["c"], "需补充{}".format(yingshe[item_next['c']]), 1])
+                    error_list.append([page, number, item_current["i"], item_current["c"], "", 1])
+                    error_list.append([page, number, item_next["i"], item_next["c"], "", 1])
                 flag = True
                 if i + 2 == len(yinhao_pairs):
                     # 走到这一步，说明最后一个item已经判断
@@ -585,7 +578,6 @@ def check(text, number, page):
                 error_list.append([page, number, temp1["i"], text[temp1["i"]], temp1["errmsg"], 2])
             else:
                 error_list.append([page, number, temp1["i"], text[temp1["i"]], temp1["errmsg"], 1])
-
     # 括号错误
     # 可以先统一为半角，然后在进行全半角计算
     if len(kuohao_nesting) >= 2:
@@ -608,7 +600,6 @@ def check(text, number, page):
         dict_err['errortype'] = err[5]
         dict_err["rule"] = "punctuation"
         error_list_dict.append(dict_err)
-
     # 判断标点是否连续使用
     lian_xv_cuo_wu = []
     if len(li_left_allbiaodian) > 0:
@@ -772,8 +763,6 @@ def check(text, number, page):
     for i in idx_to_remove:
         lian_xv_cuo_wu.pop(i)
 
-
-
     error_list_dict.extend(lian_xv_cuo_wu)
     error_list_dict.sort(key=lambda x: x["offset"])
     return error_list_dict
@@ -857,6 +846,8 @@ def is_chinese_or_english_char(char):
 def is_compare(i, text):
     # 判断尖括号是不是大于小于号
     # 比较一般发生在数字和变量之前
+    if text[i] not in {"<", ">"}:
+        return False
     pattern_variable = "[A-Za-z 0-9\.+-_]+"
     pattern_digit = '[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?[\)）]?'
     left = text[:i][::-1]
@@ -1075,14 +1066,14 @@ def c_yinhao_nesting_check(yinhao_list,text, label="“", yingshe=None):
     return new_list
 
 
-def is_one_sentence(text, flag=True):
+def is_one_sentence(text, flag=False):
     # flag=True代表双引号的正常使用，False不是
     if len(text) == 0:
         return True
     end_of_sen = {"。", "?", "？", "!", "！"}
     last_char = text[-1]
     if last_char in end_of_sen:
-        return True
+        return False
     else:
         if flag:
             return True
@@ -1145,7 +1136,7 @@ def shuminghao_check(shuminghao_list, text):
     yinhao_list = sorted(shuminghao_list, key=lambda x: x["i"])
 
     error_list = []
-    errmsg = "{}应写在{}之内".format(left2+right2, left1+right1)
+    errmsg = "{}应写在《》之内"
     errmsg1 = "成对标点符号格式须一致"
     yinhao_list = split_list(yinhao_list, right_set)
 
@@ -1157,8 +1148,12 @@ def shuminghao_check(shuminghao_list, text):
                 # 有一个是大于小于号的话，跳过
                 if is_compare(ll['i'], text) or is_compare(rr['i'], text):
                     continue
-                ll['errmsg'] = errmsg
-                rr['errmsg'] = errmsg
+                if text[ll["i"]] == "\u3008" or text[ll["i"]] == "\u3009":
+                    er = errmsg.format("\u3008\u3009")
+                else:
+                    er = errmsg.format("<>")
+                ll['errmsg'] = er
+                rr['errmsg'] = er
                 error_list.append(ll)
                 error_list.append(rr)
             elif ll['c'] == left1 and rr['c'] == right2:
@@ -1190,77 +1185,172 @@ def shuminghao_check(shuminghao_list, text):
                     error_list.extend([item_last1, item_current])
                 # “ “ ’ ”
                 elif item_last1['c'] == left1 and item_current['c'] == right2:
-
-                    item_last1["errmsg"] = errmsg
+                    if text[item_current["i"]] in {"\u3008", "\u3009"}:
+                        er = errmsg.format("\u3008\u3009")
+                    else:
+                        er = errmsg.format("<>")
+                    item_last1["errmsg"] = er
                     error_list.extend([item_last1])
                 # “ ‘ ” ”
                 elif item_last1['c'] == left2 and item_current['c'] == right1:
-                    item_current["errmsg"] = errmsg
+                    if text[item_last1["i"]] in {"\u3008", "\u3009"}:
+                        er = errmsg.format("\u3008\u3009")
+                    else:
+                        er = errmsg.format("<>")
+                    item_current["errmsg"] = er
                     error_list.extend([item_current])
             # ‘ ’
             elif item_last2["c"] == left2 and item_next['c'] == right2:
+                if is_compare(item_last2['i'], text) or is_compare(item_next["i"], text):   # 外层符号是大小于号的话，忽略
 
-                #  ‘ ‘ ’ ’
-                if item_last1['c'] == left2 and item_current['c'] == right2:
-                    item_last2["errmsg"] = errmsg
-                    item_next["errmsg"] = errmsg
-                    error_list.extend([item_last2, item_next])
-                # ‘ “ ” ’
+                    ll, rr = item_last1, item_current
+                    if ll['c'] == left2 and rr['c'] == right2:
+                        # continue
+                        # 有一个是大于小于号的话，跳过
+                        if is_compare(ll['i'], text) or is_compare(rr['i'], text):
+                            continue
+                        if text[ll["i"]] == "\u3008" or text[ll["i"]] == "\u3009":
+                            er = errmsg.format("\u3008\u3009")
+                        else:
+                            er = errmsg.format("<>")
+                        ll['errmsg'] = er
+                        rr['errmsg'] = er
+                        error_list.append(ll)
+                        error_list.append(rr)
+                    elif ll['c'] == left1 and rr['c'] == right2:
+                        is_com = is_compare(rr['i'], text)
+                        if is_com:
+                            ll["errmsg"] = "需补充》"
+                            error_list.append(ll)
+                        else:
+                            ll['errmsg'] = errmsg1
+                            rr['errmsg'] = errmsg1
+                            error_list.append(ll)
+                            error_list.append(rr)
+                    elif ll['c'] == left2 and rr['c'] == right1:
+                        if is_compare(ll['i'], text):
+                            rr['errmsg'] = "需补充《"
+                        else:
+                            ll['errmsg'] = errmsg1
+                            rr['errmsg'] = errmsg1
+                            error_list.append(ll)
+                            error_list.append(rr)
                 else:
-                    #  “ ‘ “ ” ’ ”
-                    item_last2["errmsg"] = errmsg
-                    item_last1["errmsg"] = errmsg
-                    item_current["errmsg"] = errmsg
-                    item_next["errmsg"] = errmsg
-                    error_list.extend([item_last2, item_last1, item_current, item_next])
+                    if item_last1['c'] == left2 and item_current['c'] == right2:
+                        if text[item_last2["i"]] in {"\u3008", "\u3009"}:
+                            item_last2["errmsg"] = errmsg.format("\u3008\u3009")
+                        else:
+                            item_last2["errmsg"] = errmsg.format("<>")
+
+                        if text[item_next["i"]] in {"\u3008", "\u3009"}:
+                            item_next["errmsg"] = errmsg.format("\u3008\u3009")
+                        else:
+                            item_next["errmsg"] = errmsg.format("<>")
+                        error_list.extend([item_last2, item_next])
+                    # ‘ “ ” ’
+                    else:
+                        #  “ ‘ “ ” ’ ”
+                        if text[item_last2["i"]] in {"\u3008", "\u3009"}:
+                            item_last2["errmsg"] = errmsg.format("\u3008\u3009")
+                            item_last1["errmsg"] = errmsg.format("\u3008\u3009")
+                            item_current["errmsg"] = errmsg.format("\u3008\u3009")
+                        else:
+                            item_last2["errmsg"] = errmsg.format("<>")
+                            item_last1["errmsg"] = errmsg.format("<>")
+                            item_current["errmsg"] = errmsg.format("<>")
+                        if text[item_next["i"]] in {"\u3008", "\u3009"}:
+                            item_next["errmsg"] = errmsg.format("\u3008\u3009")
+                        else:
+                            item_next["errmsg"] = errmsg.format("<>")
+                        error_list.extend([item_last2, item_last1, item_current, item_next])
             # “ ’
             elif item_last2["c"] == left1 and item_next['c'] == right2:
                 # “ ‘ ” ’
-                item_last2["errmsg"] = errmsg
-                item_last1["errmsg"] = errmsg
-                item_current["errmsg"] = errmsg
-                item_next["errmsg"] = errmsg
+                if text[item_next["i"]] in {"\u3008", "\u3009"}:
+                    item_last2["errmsg"] = errmsg.format("\u3008\u3009")
+                    # item_last1["errmsg"] = errmsg.format("\u3008\u3009")
+                    item_current["errmsg"] = errmsg.format("\u3008\u3009")
+                    item_next["errmsg"] = errmsg.format("\u3008\u3009")
+                else:
+                    item_last2["errmsg"] = errmsg.format("<>")
+                    item_next["errmsg"] = errmsg.format("<>")
+                    item_current["errmsg"] = errmsg.format("<>")
+                if text[item_last1["i"]] in {"\u3008", "\u3009"}:
+                    item_last1["errmsg"] = errmsg.format("\u3008\u3009")
+                else:
+                    item_last1["errmsg"] = errmsg.format("<>")
+
                 error_list.extend([item_last2, item_next, item_last1, item_current])
             # ‘ ”
             elif item_last2["c"] == left2 and item_next['c'] == right1:
                 # ‘ ‘ ” ”
-                item_last2["errmsg"] = errmsg
-                item_last1["errmsg"] = errmsg
-                item_current["errmsg"] = errmsg
-                item_next["errmsg"] = errmsg
+                if text[item_last2["i"]] in {"\u3008", "\u3009"}:
+                    item_last2["errmsg"] = errmsg.format("\u3008\u3009")
+                    # item_last1["errmsg"] = errmsg.format("\u3008\u3009")
+                    item_current["errmsg"] = errmsg.format("\u3008\u3009")
+                    item_next["errmsg"] = errmsg.format("\u3008\u3009")
+                else:
+                    item_last2["errmsg"] = errmsg.format("<>")
+                    item_next["errmsg"] = errmsg.format("<>")
+                    item_current["errmsg"] = errmsg.format("<>")
+                if text[item_last1["i"]] in {"\u3008", "\u3009"}:
+                    item_last1["errmsg"] = errmsg.format("\u3008\u3009")
+                else:
+                    item_last1["errmsg"] = errmsg.format("<>")
                 error_list.extend([item_last2, item_next, item_last1, item_current])
         else:
             i = 0
             while len(pair_list) > 0:
                 ss = pair_list[0]
                 ee = pair_list[-1]
+                if is_compare(ss["i"], text) or is_compare(ee["i"], text):
+                    pair_list.pop(0)
+                    pair_list.pop(-1)
+                    continue
                 if i % 2 == 0:
                     if ss['c'] == left1 and ee['c'] == right1:
                         pass
                     else:
-                        for item in pair_list:
-                            item["errmsg"] = errmsg
-                            error_list.append(item)
+                        if text[ss["i"]] in {"\u3008", "\u3009"}:
+                            ss["errmsg"] = errmsg.format("\u3008\u3009")
+                        else:
+                            ss["errmsg"] = errmsg.format("<>")
+
+                        if text[ee["i"]] in {"\u3008", "\u3009"}:
+                            ee["errmsg"] = errmsg.format("\u3008\u3009")
+                        else:
+                            ee["errmsg"] = errmsg.format("<>")
+                        error_list.extend([ss, ee])
+
                 else:
                     if ss['c'] == left2 and ee['c'] == right2:
                         pass
                     else:
-                        if len(pair_list) == 2:
-                            a1, a2 = pair_list
-                            if a1['c'] == left1 and a2['c'] == right2:
-                                a1["errmsg"] = errmsg
-                                error_list.append(a1)
-                            elif a1['c'] == left2 and a2['c'] == right1:
-                                a2["errmsg"] = errmsg
-                                error_list.append(a2)
+                        if text[ss["i"]] in {"\u3008", "\u3009"}:
+                            ss["errmsg"] = errmsg.format("\u3008\u3009")
                         else:
-                            for item in pair_list:
-                                item["errmsg"] = errmsg
-                                error_list.append(item)
+                            ss["errmsg"] = errmsg.format("<>")
+
+                        if text[ee["i"]] in {"\u3008", "\u3009"}:
+                            ee["errmsg"] = errmsg.format("\u3008\u3009")
+                        else:
+                            ee["errmsg"] = errmsg.format("<>")
+                        error_list.extend([ss, ee])
+                        # if len(pair_list) == 2:
+                        #     a1, a2 = pair_list
+                        #     if a1['c'] == left1 and a2['c'] == right2:
+                        #         a1["errmsg"] = errmsg
+                        #         error_list.append(a1)
+                        #     elif a1['c'] == left2 and a2['c'] == right1:
+                        #         a2["errmsg"] = errmsg
+                        #         error_list.append(a2)
+                        # else:
+                        #     for item in pair_list:
+                        #         item["errmsg"] = errmsg
+                        #         error_list.append(item)
                 i += 1
                 pair_list.pop(0)
                 pair_list.pop(-1)
-
     new_list = []
     idx = set()
     for i, item in enumerate(error_list):
@@ -1274,7 +1364,6 @@ def kuohao_nesting_check(kuohao_nesting, kuo_left, kuo_right, yingshe, text):
     kuohao_nesting = sorted(kuohao_nesting, key=lambda x: x['i'])
     error_list = []
     # length = len(kuohao_nesting)
-    # print(kuohao_nesting)
     # 中文圆括号（）：又叫小括号，编码FF08和FF09
     # 西文圆括号()：又叫小括号，编码0028和0029
     # 中文方括号［］：又叫中括号，编码FF3B和FF3D
@@ -1285,7 +1374,6 @@ def kuohao_nesting_check(kuohao_nesting, kuo_left, kuo_right, yingshe, text):
     kuohao_list = split_list(kuohao_nesting, kuo_right)
     errmsg = "成对标点符号格式须一致"
     errmsg1 = "套用错误"
-    # print(kuohao_list)
     # 把所有全角转化为半角括号，然后判断嵌套类错误
     quan_to_ban = {"\uFF08": "\u0028", "\uFF09": "\u0029",
                    "\uFF3B": "\u005B", "\uFF3D": "\u005D",
@@ -1319,7 +1407,6 @@ def kuohao_nesting_check(kuohao_nesting, kuo_left, kuo_right, yingshe, text):
             # 判断中间是否是数学公式
             math_match = math_pattern.match(middle_text)
             chars_match = chars_pattern.match(middle_text)
-            # print(math_match)
             if math_match and not chars_match:
                 #
                 if len(pair_list) <= 4:
@@ -1435,7 +1522,7 @@ def check_punc(text):
 if __name__ == '__main__':
     # check_punc(text)‘’
     # '^[a-zA-Z ]*[0-9\.∶-≦≈÷=∑∏≮∴＝﹣﹢﹤≤·＜＋/≡＞*㏒－∵+≠﹥≧≒≯㏑×≥∅\(\)\[\]\{\}｛｝（）］［]+$
-    text1 = """他的激情作为单纯性爱是不知道要那种一次性的极度兴奋的。经检查，‘稿件’徽州文物谱系（绩溪篇）-7-吴中共存在可疑内容（(232处)），{错误类型3种}。因此如果亨利埃特或者漂亮的葡萄牙女子离他而去，使他陷入可怕的绝望，那么，不会使他感到不安，他不会去拿起手枪来的。事实上两天以后我们就会看到他已经到了另外一个女子身边，或者他已经进了妓院。如果修女C. C. 不能再从围墙里到娱乐场来，而由半出家的修女M. M. 代替她出现，那么，安慰也就立即来到了，因为每个修女都能代替另一个修女。其中，"上下文查重"检查错误[124 }处、’易错词检查’错误[104处】、“大纲检查'错误（4处)，易错词<2个，敏感词检查〔3处}，其他错误(0处)。于是人们就不难发现，他作为真正的好色之徒从来没有热恋过他那众多女人中的某一个女人。他热恋着永久的多数，热恋不断更换的艳遇，也就是众多的艳遇。他甚至有一次脱口说出这么一句危险的话：“当时我就模模糊糊地感觉到，爱情不过是一种或多或少强烈的好奇心。”所以要想理解卡萨诺瓦就得抓住这个定义，并且深入分解好奇心这个词：好奇心AA　德文好奇心由 Nen 和 Gierde 两字组成，Neu 是新之意，Gierde 是贪婪之意。BB，是永远贪求永远新的东西，是永远在另一些女人那里贪求永远另一些体验。刺激他的从来不是个体，而是变体，是在异常丰富的性爱棋盘上不间断更新的组合。经检查，《‘稿件徽州文物谱系（绩溪篇）-7-吴》中共存在可疑内容（(232处），{错误类型3种。他的取得和放开都是不假思索的，都是顺从天性的，就如同吸气与呼气一样。这种纯粹官能上的享受说明了，为什么身为艺术家的卡萨诺瓦却没有使他那上千名女子中的某一个女子给我们留下真实的精神形象。平心而论，他的种种描述都使人产生怀疑：他可能根本没有看清楚过他那些情人的面孔，而只是在某一个位置上，用某个极为平庸的观点观看过她们。依据真正南国的风格来看，使得他兴奋鼓舞和“激发”他的热情的始终是那些粗俗的、土里土气的和可以触摸到的东西，还有就是跃进眼帘的女人动情的瞬间。反反复复总是（直到厌倦时为止）“雪白的胸脯”、“美好的臀部”、“端庄威严的形象”，还有不断通过偶然事件而显露出“最神秘的魅力”。其中，"上下文查重检查错误[124]处。正是这些东西使得好色的文科中学生对一个使女看得瞳仁发痒，于是从无数亨利埃特、伊雷妮、巴贝特、马里乌齐莎、埃默丽娜、马尔科丽娜、伊格纳齐亚、卢齐亚、埃斯特尔、扎拉和克拉拉（必定能写满一整本日历！）中间所留存下来的只不过是温暖放荡的女人身上肉皮色的美肤香膏，一种酒神式的号码与数量，成果和热情的混杂物——他的样子完全是醉鬼在早上的表现，他昏沉沉的脑袋已经清醒，他全然不知昨天晚上饮了什么酒，在什么地方饮的，还有与谁在一起饮的。对于那众多的女子，他只是享受到了肌肤，感受到了外表，仅仅认识了她们的肉体。在这里精密的艺术标尺比生活本身给我们更清楚地显示了单纯的好色者与真正的热恋者之间的重大差别，显示了获得一切却无所保留的人与取得很少但全力以赴把转瞬即逝的东西提升为经久不变的东西的人之间的重大差别。易错词检查'错误104处】。司汤达这位实际上相当悲惨的爱情勇士从唯一的一次经历中通过升华分离出来的精神内容，比卡萨诺瓦从这里的三千个夜晚里分离出来的精神内容还多。在精神极度兴奋的什么范围内性爱可能升高，关于这一点，卡萨诺瓦的全部十六大卷的回忆录所给予的概念还不如歌德的一首四个诗节的短诗。大纲检查”错误（4处）。因此，从更高的意义上来看，卡萨诺瓦的回忆录主要是统计数字的报告，而不是长篇小说，主要是征战的经历，而不是虚构创作，是一部在肉欲中漫游的《奥德修纪》，是一部男子对永恒的海伦娜永久贪求的《伊利昂纪》。卡萨诺瓦的回忆录的价值在于它的量，而不是在于它的质。它是以多种变体而不是以单个事例，是通过各种形式不是通过含意深邃的思想，显示出它的价值的。"""
+    text1 = "《 ,《 < 》 》, 》"
     text2 = '？！'
     text = [{'paragraphContent': text1, 'paragraphNumber': 1, 'pageIndex': 1}]
     a = check_punc(text)
